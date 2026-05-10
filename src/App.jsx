@@ -1,197 +1,401 @@
 import React, { useMemo, useState } from "react";
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
-  AreaChart,
-  Area,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
+
 import {
-  TrendingUp,
-  Users,
   DollarSign,
+  Users,
   Activity,
   Ticket,
+  TrendingUp,
   Target,
+  Trophy,
+  Megaphone,
+  ShoppingBag,
+  BarChart3,
 } from "lucide-react";
 
-const baseGames = [
-  { game: "vs Bulls", opponent: 72, attendance: 15600, price: 48, social: 64, promo: "None", revenue: 748800 },
-  { game: "vs Lakers", opponent: 94, attendance: 18900, price: 82, social: 91, promo: "Jersey Night", revenue: 1549800 },
-  { game: "vs Heat", opponent: 81, attendance: 17100, price: 61, social: 76, promo: "Student Night", revenue: 1043100 },
-  { game: "vs Knicks", opponent: 86, attendance: 17850, price: 68, social: 82, promo: "Sponsor Night", revenue: 1213800 },
-  { game: "vs Celtics", opponent: 92, attendance: 18400, price: 77, social: 88, promo: "Rivalry Game", revenue: 1416800 },
-  { game: "vs Pistons", opponent: 55, attendance: 13200, price: 36, social: 48, promo: "Discount Night", revenue: 475200 },
+const games = [
+  {
+    game: "vs Lakers",
+    attendance: 18900,
+    revenue: 1549800,
+    social: 91,
+    merch: 320000,
+    sponsor: 210000,
+    opponent: "Lakers",
+  },
+  {
+    game: "vs Celtics",
+    attendance: 18400,
+    revenue: 1416800,
+    social: 88,
+    merch: 280000,
+    sponsor: 194000,
+    opponent: "Celtics",
+  },
+  {
+    game: "vs Knicks",
+    attendance: 17850,
+    revenue: 1213800,
+    social: 82,
+    merch: 245000,
+    sponsor: 182000,
+    opponent: "Knicks",
+  },
+  {
+    game: "vs Heat",
+    attendance: 17100,
+    revenue: 1043100,
+    social: 76,
+    merch: 201000,
+    sponsor: 151000,
+    opponent: "Heat",
+  },
+  {
+    game: "vs Bulls",
+    attendance: 15600,
+    revenue: 748800,
+    social: 64,
+    merch: 142000,
+    sponsor: 118000,
+    opponent: "Bulls",
+  },
+  {
+    game: "vs Pistons",
+    attendance: 13200,
+    revenue: 475200,
+    social: 48,
+    merch: 97000,
+    sponsor: 85000,
+    opponent: "Pistons",
+  },
 ];
+
+const COLORS = ["#3B82F6", "#8B5CF6", "#10B981", "#F59E0B"];
 
 export default function App() {
   const [discount, setDiscount] = useState(0);
-  const [promoBoost, setPromoBoost] = useState(8);
-  const [socialBoost, setSocialBoost] = useState(5);
+  const [promoBoost, setPromoBoost] = useState(10);
+  const [socialBoost, setSocialBoost] = useState(8);
 
-  const data = useMemo(() => {
-    return baseGames.map((g) => {
-      const demandBoost =
-        g.opponent * 0.08 +
-        g.social * 0.05 +
-        promoBoost * 45 +
-        socialBoost * 30 -
-        discount * 22;
+  const forecastData = useMemo(() => {
+    return games.map((g) => {
+      const predictedAttendance = Math.round(
+        g.attendance +
+          promoBoost * 55 +
+          socialBoost * 40 -
+          discount * 20
+      );
 
-      const predictedAttendance = Math.round(g.attendance + demandBoost);
-      const adjustedPrice = Math.max(20, Math.round(g.price * (1 - discount / 100)));
-      const predictedRevenue = predictedAttendance * adjustedPrice;
-      const utilization = Math.min(100, Math.round((predictedAttendance / 19000) * 100));
+      const adjustedRevenue = Math.round(
+        predictedAttendance * ((g.revenue / g.attendance) * (1 - discount / 100))
+      );
+
+      const utilization = Math.min(
+        100,
+        Math.round((predictedAttendance / 19000) * 100)
+      );
 
       let recommendation = "Hold Pricing";
-      if (utilization > 92) recommendation = "Increase Price";
+
+      if (utilization > 95) recommendation = "Increase Price";
       if (utilization < 75) recommendation = "Add Promotion";
 
       return {
         ...g,
         predictedAttendance,
-        adjustedPrice,
-        predictedRevenue,
+        adjustedRevenue,
         utilization,
         recommendation,
       };
     });
   }, [discount, promoBoost, socialBoost]);
 
-  const totalRevenue = data.reduce((sum, g) => sum + g.predictedRevenue, 0);
+  const totalRevenue = forecastData.reduce(
+    (acc, g) => acc + g.adjustedRevenue,
+    0
+  );
+
   const avgAttendance = Math.round(
-    data.reduce((sum, g) => sum + g.predictedAttendance, 0) / data.length
+    forecastData.reduce((acc, g) => acc + g.predictedAttendance, 0) /
+      forecastData.length
   );
+
+  const avgEngagement = Math.round(
+    forecastData.reduce((acc, g) => acc + g.social, 0) /
+      forecastData.length
+  );
+
   const avgUtilization = Math.round(
-    data.reduce((sum, g) => sum + g.utilization, 0) / data.length
+    forecastData.reduce((acc, g) => acc + g.utilization, 0) /
+      forecastData.length
   );
-  const avgSocial = Math.round(data.reduce((sum, g) => sum + g.social, 0) / data.length);
+
+  const sponsorData = [
+    { name: "Arena Sponsor", value: 35 },
+    { name: "Jersey Sponsor", value: 28 },
+    { name: "Digital Campaigns", value: 22 },
+    { name: "Game Activations", value: 15 },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <header className="space-y-3">
-          <p className="text-blue-400 font-semibold">Sports Business Intelligence Platform</p>
-          <h1 className="text-4xl md:text-6xl font-bold">FanPulse BI</h1>
-          <p className="text-slate-300 max-w-3xl">
-            Forecast ticket demand, attendance, fan engagement, sponsorship ROI, and revenue
-            opportunities using sports business analytics.
+    <div className="min-h-screen bg-slate-950 text-white flex">
+      <aside className="w-72 bg-slate-900 border-r border-slate-800 p-6 hidden lg:block">
+        <h1 className="text-3xl font-bold mb-2">FanPulse BI</h1>
+        <p className="text-slate-400 text-sm mb-8">
+          Sports Business Intelligence Platform
+        </p>
+
+        <nav className="space-y-3">
+          <SidebarItem icon={<BarChart3 size={18} />} label="Executive Dashboard" />
+          <SidebarItem icon={<Ticket size={18} />} label="Attendance Forecasting" />
+          <SidebarItem icon={<DollarSign size={18} />} label="Revenue Analytics" />
+          <SidebarItem icon={<Megaphone size={18} />} label="Sponsor ROI" />
+          <SidebarItem icon={<ShoppingBag size={18} />} label="Merchandise Demand" />
+          <SidebarItem icon={<TrendingUp size={18} />} label="Fan Engagement" />
+        </nav>
+
+        <div className="mt-10 bg-slate-800 rounded-2xl p-4">
+          <h3 className="font-semibold mb-2">Dataset Sources</h3>
+          <ul className="text-sm text-slate-300 space-y-2">
+            <li>• NBA Games Dataset (Kaggle)</li>
+            <li>• Sports Attendance Dataset</li>
+            <li>• NBA Social Metrics Dataset</li>
+            <li>• Simulated Ticket Pricing Data</li>
+          </ul>
+        </div>
+      </aside>
+
+      <main className="flex-1 p-6 space-y-8 overflow-y-auto">
+        <div>
+          <p className="text-blue-400 font-semibold">
+            Sports Business Intelligence Platform
           </p>
-        </header>
+          <h1 className="text-5xl font-bold mt-2">Executive Dashboard</h1>
+          <p className="text-slate-400 mt-3 max-w-3xl">
+            Forecast attendance, ticket demand, sponsorship ROI, merchandise
+            sales, and fan engagement using predictive sports business analytics.
+          </p>
+        </div>
 
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <MetricCard icon={<Ticket />} label="Avg Attendance Forecast" value={avgAttendance.toLocaleString()} />
-          <MetricCard icon={<DollarSign />} label="Projected Revenue" value={`$${totalRevenue.toLocaleString()}`} />
-          <MetricCard icon={<Users />} label="Arena Utilization" value={`${avgUtilization}%`} />
-          <MetricCard icon={<Activity />} label="Fan Engagement Score" value={avgSocial} />
+          <MetricCard
+            icon={<Ticket />}
+            label="Avg Attendance Forecast"
+            value={avgAttendance.toLocaleString()}
+          />
+          <MetricCard
+            icon={<DollarSign />}
+            label="Projected Revenue"
+            value={`$${totalRevenue.toLocaleString()}`}
+          />
+          <MetricCard
+            icon={<Users />}
+            label="Arena Utilization"
+            value={`${avgUtilization}%`}
+          />
+          <MetricCard
+            icon={<Activity />}
+            label="Fan Engagement"
+            value={avgEngagement}
+          />
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-slate-900 rounded-2xl p-5 shadow-xl lg:col-span-2">
-            <h2 className="text-xl font-bold mb-4">Attendance Forecast</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data}>
+          <div className="bg-slate-900 rounded-2xl p-5 lg:col-span-2">
+            <h2 className="text-xl font-bold mb-4">
+              Attendance Forecasting
+            </h2>
+
+            <ResponsiveContainer width="100%" height={320}>
+              <LineChart data={forecastData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <XAxis dataKey="game" stroke="#CBD5E1" />
                 <YAxis stroke="#CBD5E1" />
                 <Tooltip />
-                <Line type="monotone" dataKey="attendance" name="Current Attendance" stroke="#60A5FA" strokeWidth={3} />
-                <Line type="monotone" dataKey="predictedAttendance" name="Predicted Attendance" stroke="#22C55E" strokeWidth={3} />
+                <Line
+                  type="monotone"
+                  dataKey="attendance"
+                  stroke="#3B82F6"
+                  strokeWidth={3}
+                  name="Current Attendance"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="predictedAttendance"
+                  stroke="#22C55E"
+                  strokeWidth={3}
+                  name="Predicted Attendance"
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-slate-900 rounded-2xl p-5 shadow-xl">
-            <h2 className="text-xl font-bold mb-4">Scenario Simulator</h2>
+          <div className="bg-slate-900 rounded-2xl p-5">
+            <h2 className="text-xl font-bold mb-5">Scenario Simulator</h2>
 
-            <Control
+            <SliderControl
               label="Ticket Discount"
               value={discount}
               setValue={setDiscount}
               max={30}
-              suffix="%"
             />
-            <Control
+
+            <SliderControl
               label="Promotion Boost"
               value={promoBoost}
               setValue={setPromoBoost}
               max={25}
-              suffix="%"
             />
-            <Control
+
+            <SliderControl
               label="Social Campaign Boost"
               value={socialBoost}
               setValue={setSocialBoost}
               max={25}
-              suffix="%"
             />
 
             <div className="mt-5 bg-slate-800 rounded-xl p-4 text-sm text-slate-300">
-              Adjust pricing, promotions, and social campaign strength to simulate sports operations decisions.
+              Simulate pricing adjustments, marketing campaigns, and promotions
+              to evaluate revenue and attendance outcomes.
             </div>
           </div>
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-slate-900 rounded-2xl p-5 shadow-xl">
-            <h2 className="text-xl font-bold mb-4">Revenue Forecast</h2>
+          <div className="bg-slate-900 rounded-2xl p-5">
+            <h2 className="text-xl font-bold mb-4">
+              Revenue Forecast
+            </h2>
+
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data}>
+              <BarChart data={forecastData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <XAxis dataKey="game" stroke="#CBD5E1" />
                 <YAxis stroke="#CBD5E1" />
                 <Tooltip />
-                <Bar dataKey="predictedRevenue" name="Projected Revenue" fill="#38BDF8" radius={[8, 8, 0, 0]} />
+                <Bar
+                  dataKey="adjustedRevenue"
+                  fill="#38BDF8"
+                  radius={[8, 8, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-slate-900 rounded-2xl p-5 shadow-xl">
-            <h2 className="text-xl font-bold mb-4">Fan Engagement Trend</h2>
+          <div className="bg-slate-900 rounded-2xl p-5">
+            <h2 className="text-xl font-bold mb-4">
+              Fan Engagement Trend
+            </h2>
+
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={data}>
+              <AreaChart data={forecastData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <XAxis dataKey="game" stroke="#CBD5E1" />
                 <YAxis stroke="#CBD5E1" />
                 <Tooltip />
-                <Area type="monotone" dataKey="social" name="Engagement Score" stroke="#A78BFA" fill="#7C3AED" />
+                <Area
+                  type="monotone"
+                  dataKey="social"
+                  stroke="#8B5CF6"
+                  fill="#7C3AED"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </section>
 
-        <section className="bg-slate-900 rounded-2xl p-5 shadow-xl">
-          <h2 className="text-xl font-bold mb-4">Dynamic Pricing Recommendations</h2>
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-slate-900 rounded-2xl p-5">
+            <h2 className="text-xl font-bold mb-4">
+              Sponsorship ROI Breakdown
+            </h2>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={sponsorData}
+                  dataKey="value"
+                  outerRadius={110}
+                  label
+                >
+                  {sponsorData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-slate-900 rounded-2xl p-5">
+            <h2 className="text-xl font-bold mb-4">
+              Merchandise Demand
+            </h2>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={forecastData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis dataKey="game" stroke="#CBD5E1" />
+                <YAxis stroke="#CBD5E1" />
+                <Tooltip />
+                <Bar
+                  dataKey="merch"
+                  fill="#10B981"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section className="bg-slate-900 rounded-2xl p-5">
+          <h2 className="text-xl font-bold mb-4">
+            Dynamic Pricing Recommendations
+          </h2>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="text-slate-400 border-b border-slate-700">
+              <thead className="border-b border-slate-700 text-slate-400">
                 <tr>
                   <th className="py-3">Game</th>
-                  <th>Promotion</th>
-                  <th>Predicted Attendance</th>
+                  <th>Attendance Forecast</th>
                   <th>Utilization</th>
-                  <th>Adjusted Price</th>
-                  <th>Projected Revenue</th>
+                  <th>Revenue Forecast</th>
                   <th>Recommendation</th>
                 </tr>
               </thead>
+
               <tbody>
-                {data.map((g) => (
-                  <tr key={g.game} className="border-b border-slate-800">
+                {forecastData.map((g) => (
+                  <tr
+                    key={g.game}
+                    className="border-b border-slate-800"
+                  >
                     <td className="py-3 font-semibold">{g.game}</td>
-                    <td>{g.promo}</td>
                     <td>{g.predictedAttendance.toLocaleString()}</td>
                     <td>{g.utilization}%</td>
-                    <td>${g.adjustedPrice}</td>
-                    <td>${g.predictedRevenue.toLocaleString()}</td>
+                    <td>${g.adjustedRevenue.toLocaleString()}</td>
                     <td>
-                      <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300">
+                      <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full">
                         {g.recommendation}
                       </span>
                     </td>
@@ -203,32 +407,59 @@ export default function App() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Insight title="Best Revenue Game" value="vs Lakers" detail="Highest projected demand from opponent strength, rivalry interest, and social engagement." />
-          <Insight title="Best Promotion Opportunity" value="vs Pistons" detail="Lower projected utilization makes this game ideal for discounts or student bundles." />
-          <Insight title="Sponsor ROI Focus" value="vs Knicks" detail="Strong social score and attendance projection make this ideal for sponsor activation." />
+          <InsightCard
+            icon={<Trophy />}
+            title="Highest Revenue Projection"
+            value="vs Lakers"
+            detail="Strong rivalry interest and social engagement create the highest projected ticket demand."
+          />
+
+          <InsightCard
+            icon={<Target />}
+            title="Best Promotion Opportunity"
+            value="vs Pistons"
+            detail="Lower attendance projection makes this matchup ideal for discount campaigns."
+          />
+
+          <InsightCard
+            icon={<TrendingUp />}
+            title="Top Engagement Matchup"
+            value="vs Celtics"
+            detail="Social engagement metrics indicate strong digital campaign performance potential."
+          />
         </section>
-      </div>
+      </main>
+    </div>
+  );
+}
+
+function SidebarItem({ icon, label }) {
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800 hover:bg-slate-700 transition cursor-pointer">
+      <div className="text-blue-400">{icon}</div>
+      <span>{label}</span>
     </div>
   );
 }
 
 function MetricCard({ icon, label, value }) {
   return (
-    <div className="bg-slate-900 rounded-2xl p-5 shadow-xl">
+    <div className="bg-slate-900 rounded-2xl p-5">
       <div className="text-blue-400 mb-3">{icon}</div>
       <p className="text-slate-400 text-sm">{label}</p>
-      <h3 className="text-2xl font-bold mt-1">{value}</h3>
+      <h3 className="text-2xl font-bold mt-2">{value}</h3>
     </div>
   );
 }
 
-function Control({ label, value, setValue, max, suffix }) {
+function SliderControl({ label, value, setValue, max }) {
   return (
     <div className="mb-5">
       <div className="flex justify-between mb-2">
-        <span className="text-slate-300">{label}</span>
-        <span className="font-semibold">{value}{suffix}</span>
+        <span>{label}</span>
+        <span className="font-semibold">{value}%</span>
       </div>
+
       <input
         type="range"
         min="0"
@@ -241,15 +472,13 @@ function Control({ label, value, setValue, max, suffix }) {
   );
 }
 
-function Insight({ title, value, detail }) {
+function InsightCard({ icon, title, value, detail }) {
   return (
-    <div className="bg-slate-900 rounded-2xl p-5 shadow-xl">
-      <div className="text-green-400 mb-3">
-        <Target />
-      </div>
+    <div className="bg-slate-900 rounded-2xl p-5">
+      <div className="text-green-400 mb-3">{icon}</div>
       <p className="text-slate-400 text-sm">{title}</p>
-      <h3 className="text-xl font-bold mt-1">{value}</h3>
-      <p className="text-slate-300 text-sm mt-2">{detail}</p>
+      <h3 className="text-2xl font-bold mt-2">{value}</h3>
+      <p className="text-slate-300 text-sm mt-3">{detail}</p>
     </div>
   );
 }
