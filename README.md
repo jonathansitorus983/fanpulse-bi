@@ -62,13 +62,3 @@ Then open:
 ```bash
 http://localhost:8080
 ```
-
-## Suggested Resume Bullets
-
-- Developed a sports business intelligence platform forecasting attendance, ticket revenue, merchandise demand, and sponsorship ROI using scenario-based analytics.
-- Built a dynamic pricing recommendation engine that simulated ticket price adjustments based on demand, opponent strength, promotions, and fan engagement.
-- Designed a deployment-ready React dashboard with interactive forecasting charts, executive KPIs, and what-if controls for sports operations strategy.
-
-## Project Positioning
-
-This project is not a basic sports dashboard. It demonstrates business analytics, pricing strategy, forecasting logic, product thinking, dashboard design, and deployment readiness.
